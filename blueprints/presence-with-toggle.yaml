@@ -131,7 +131,7 @@ actions:
       sequence:
         - if:
             - condition: state
-              entity_id: automation.office_lighting
+              entity_id: this.entity_id
               state: "on"
           then:
             - action: automation.turn_off
@@ -139,7 +139,7 @@ actions:
               data:
                 stop_actions: false
               target:
-                entity_id: automation.office_lighting
+                entity_id: this.entity_id
             - device_id: !input light_target
               domain: select
               entity_id: !input status_light
@@ -150,7 +150,7 @@ actions:
               metadata: {}
               data: {}
               target:
-                entity_id: automation.office_lighting
+                entity_id: this.entity_id
             - device_id: !input light_target
               domain: select
               entity_id: !input status_light
