@@ -1,0 +1,158 @@
+blueprint:
+  name: Presence-activated Light with Inovelli toggle
+  description: Turn on a light when presence is detected, allow toggling behavior with Inovelli config button.
+  domain: automation
+  source_url: https://github.com/antoniopacheco/presence_light/presence_light.yaml
+  input:
+    presence_entity:
+      name: Presence Sensor
+      description: Presence sensor device
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: occupancy
+    light_target:
+      name: Light
+      description: Light device
+      selector:
+        target:
+          entity:
+            domain: light
+    toggle_entity:
+      name: Toggle Button
+      description: Button to toggle this automation
+      selector:
+        entity:
+          domain: event
+    status_light:
+      name: Status light
+      description: Status LED control
+      selector:
+        target:
+          entity:
+            domain: light
+
+    bright_percentage:
+      name: Bright Percentage
+      description: Brightness level that the light will turn into once is turned on
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: percentage
+    no_motion_wait:
+      name: Wait time
+      description: Time to leave the light on after last motion is detected.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    off_transition:
+      name: Transition time
+      description: Time in seconds of transition turning off
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: seconds
+    light_sensor:
+      name: Light sensor
+      description: Light sensor to read from
+      default: []
+      selector:
+        entity:
+          domain:
+            - sensor
+          device_class:
+            - illuminance
+          multiple: false
+    light_threshold:
+      name: Light threshold
+      description: Light sensor‘s lower threshold
+      default: 200
+      selector:
+        number:
+          min: 0
+          max: 255
+
+# If presence is detected within the delay,
+# we restart the script.
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - id: presence
+    trigger: state
+    entity_id:
+      - !input presence_entity
+    from: "off"
+    to: "on"
+  - id: toggle
+    trigger: state
+    entity_id:
+      - !input toggle_entity
+
+actions:
+  - choose:
+    - conditions:
+        - condition: trigger
+          id:
+            - toggle
+        - condition: numeric_state
+          entity_id: !input light_sensor
+          below: !input light_threshold
+      sequence:
+        - alias: "Turn on the light"
+          service: light.turn_on
+          target: !input light_target
+          data:
+            brightness_pct: !input bright_percentage
+        - alias: "Wait until there is no motion from device"
+          wait_for_trigger:
+            platform: state
+            entity_id: !input presence_entity
+            from: "on"
+            to: "off"
+        - alias: "Wait the number of seconds that has been set"
+          delay: !input no_motion_wait
+        - alias: "Turn off the light"
+          service: light.turn_off
+          target: !input light_target
+          data:
+            transition: !input off_transition
+    - conditions:
+        - condition: trigger
+          id:
+            - toggle
+      sequence:
+        - if:
+            - condition: state
+              entity_id: automation.office_lighting
+              state: "on"
+          then:
+            - action: automation.turn_off
+              metadata: {}
+              data:
+                stop_actions: false
+              target:
+                entity_id: automation.office_lighting
+            - device_id: !input light_target
+              domain: select
+              entity_id: !input status_light
+              type: select_option
+              option: Orange
+          else:
+            - action: automation.turn_on
+              metadata: {}
+              data: {}
+              target:
+                entity_id: automation.office_lighting
+            - device_id: !input light_target
+              domain: select
+              entity_id: !input status_light
+              type: select_option
+              option: Blue
