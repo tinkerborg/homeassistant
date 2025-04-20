@@ -140,7 +140,7 @@ actions:
                 stop_actions: false
               target:
                 entity_id: this.entity_id
-            - device_id: !input light_target
+            - device_id: !input light_target.device_id
               domain: select
               entity_id: !input status_light
               type: select_option
@@ -151,8 +151,10 @@ actions:
               data: {}
               target:
                 entity_id: this.entity_id
-            - device_id: !input light_target
+            - device_id: !input light_target.device_id
               domain: select
               entity_id: !input status_light
               type: select_option
               option: Blue
+
+Message malformed: value should be a string for dictionary value @ data['actions'][0]['choose'][1]['sequence'][0]['then'][1]['device_id']
