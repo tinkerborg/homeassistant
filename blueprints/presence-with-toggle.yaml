@@ -2,7 +2,7 @@ blueprint:
   name: Presence-activated Light with Inovelli toggle
   description: Turn on a light when presence is detected, allow toggling behavior with Inovelli config button.
   domain: automation
-  source_url: https://github.com/antoniopacheco/presence_light/presence_light.yaml
+  source_url: https://github.com/tinkerborg/homeassistant/blob/main/blueprints/presence-with-toggle.yaml
   input:
     presence_entity:
       name: Presence Sensor
